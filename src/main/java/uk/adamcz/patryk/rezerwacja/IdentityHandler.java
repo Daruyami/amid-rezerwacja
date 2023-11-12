@@ -4,21 +4,33 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 public class IdentityHandler {
-    public static boolean loggedIn = false;
+    public static boolean LoggedIn = false;
+
+    public static UserRole Role = UserRole.Guest;
+
+    public static String Name;
 
     public static boolean SubmitCredentials(String login, String password, boolean register) {
         String preparedLogin = StringInputUtils.Escape(login);
         String passwordHash = getPasswordHash(password);
 
-        if (!register)
-            loggedIn = StorageManager.MatchCredentials(preparedLogin, passwordHash);
+        Identity identity;
+        if (!register) {
+            identity = StorageManager.MatchCredentials(preparedLogin, passwordHash);
+        }
         else {
-            loggedIn = StorageManager.TryAddCredentials(preparedLogin, passwordHash);
+            identity = StorageManager.TryAddCredentials(preparedLogin, passwordHash);
 
-            // Submit account data
         }
 
-        return loggedIn;
+        LoggedIn = identity.LoggedIn;
+
+        if ( LoggedIn ) {
+            Role = identity.Role;
+            Name = identity.Username;
+        }
+
+        return LoggedIn;
     }
 
     private static String getPasswordHash(String password) {
