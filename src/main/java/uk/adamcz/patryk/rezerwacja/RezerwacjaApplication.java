@@ -10,6 +10,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static uk.adamcz.patryk.rezerwacja.IdentityHandler.SubmitCredentials;
 
 public class RezerwacjaApplication extends Application {
@@ -84,7 +87,7 @@ public class RezerwacjaApplication extends Application {
         if (IdentityHandler.Role.ordinal() >= UserRole.Teacher.ordinal()){
             Button reserveRoomButton = new Button("Reserve a room...");
 
-            reserveRoomButton.setOnMouseClicked(e -> showLocationReservationView());
+            reserveRoomButton.setOnMouseClicked(e -> showReserveLocationView());
 
             container.getChildren().add(reserveRoomButton);
         }
@@ -112,8 +115,14 @@ public class RezerwacjaApplication extends Application {
             list.setItems(items);
             list.setPrefHeight(400);
             list.setPrefWidth(300);
+            list.getSelectionModel().select(0);
+
+            Button showReservationsButton = new Button("Show reservations");
+
+            showReservationsButton.setOnMouseClicked(e -> showLocationsReservationsView(list.getSelectionModel().getSelectedItem()));
 
             container.getChildren().add(list);
+            container.getChildren().add(showReservationsButton);
         }
         else {
             container.getChildren().add(new Label("No rooms"));
@@ -128,7 +137,7 @@ public class RezerwacjaApplication extends Application {
         listStage.show();
     }
 
-    private static void showLocationReservationView(){
+    private static void showReserveLocationView(){
         Label locationLabel = new Label("Room: ");
         TextField locationField = new TextField();
 
@@ -148,7 +157,7 @@ public class RezerwacjaApplication extends Application {
         if (IdentityHandler.Role.ordinal() >= UserRole.Teacher.ordinal()) {
             Button clearReservationsButton = new Button("Clear reservations");
 
-            //clearReservationsButton.setOnMouseClicked(e -> locationManager.ClearReservationsLocation(locationField.getText()));
+            clearReservationsButton.setOnMouseClicked(e -> locationManager.ClearReservationsLocation(locationField.getText(), startTimeField.getText(), endTimeField.getText()));
 
             container.getChildren().add(clearReservationsButton);
         }
@@ -160,6 +169,45 @@ public class RezerwacjaApplication extends Application {
         manageStage.setScene(scene);
         manageStage.setTitle("Reserve a room");
         manageStage.show();
+    }
+
+    private static void showLocationsReservationsView(String location){
+        VBox container = new VBox();
+
+        if (locationManager.Locations != null && !locationManager.Locations.isEmpty()
+                && locationManager.Locations.containsKey(location) && locationManager.Locations.get(location) != null) {
+            List<Reservation> reservations = locationManager.Locations.get(location);
+
+            List<String> formattedReservations = new ArrayList<>();
+
+            reservations.forEach(x -> {
+                formattedReservations.add(x.StartTime + "-" + x.EndTime + " reserved by " + x.OwnerUsername);
+            });
+
+            ListView<String> list = new ListView<String>();
+            ObservableList<String> items = FXCollections.observableList(formattedReservations);
+            list.setItems(items);
+            list.setPrefHeight(400);
+            list.setPrefWidth(300);
+            list.getSelectionModel().select(0);
+
+            Button showReservationsButton = new Button("Delete");
+
+            //showReservationsButton.setOnMouseClicked(e -> showLocationsReservationsView(list.getSelectionModel().getSelectedItem()));
+
+            container.getChildren().add(list);
+        }
+        else {
+            container.getChildren().add(new Label("No reservations"));
+        }
+
+        Group group = new Group(container);
+        Scene scene = new Scene(group);
+        Stage listStage = new Stage();
+
+        listStage.setScene(scene);
+        listStage.setTitle("List of reservations for "+location);
+        listStage.show();
     }
 
     private static void showManageLocationsView(){
